@@ -24,7 +24,7 @@ export function createField(canvas) {
     trail: 0.012,       // 0 = permanent buildup, higher = ghostlier strands
     lineWidth: 1.2,
     paletteId: 'aurora',
-    drift: 0.04,        // how fast the field itself evolves
+    drift: 0.006,       // slow rotation of the whole field over time
     seed: 1234,
   };
 
@@ -42,7 +42,7 @@ export function createField(canvas) {
         x: Math.random() * w,
         y: Math.random() * h,
         c: pal.colors[(Math.random() * pal.colors.length) | 0],
-        life: 40 + Math.random() * 220,
+        life: 120 + Math.random() * 320,
       });
     }
     return out;
@@ -86,11 +86,14 @@ export function createField(canvas) {
     ctx.lineCap = 'round';
 
     const { noiseScale, speed, drift } = settings;
+    // Evolve the field by slowly ROTATING the flow direction over time rather
+    // than pushing time into the noise input — that keeps the field spatially
+    // smooth (long, coherent strands) while it still drifts frame to frame.
     t += drift;
 
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
-      const angle = noise(p.x * noiseScale, p.y * noiseScale + t) * TAU * 1.6;
+      const angle = noise(p.x * noiseScale, p.y * noiseScale) * TAU * 1.6 + t;
       const nx = p.x + Math.cos(angle) * speed;
       const ny = p.y + Math.sin(angle) * speed;
 
@@ -109,7 +112,7 @@ export function createField(canvas) {
       if (p.life <= 0 || p.x < 0 || p.x > w || p.y < 0 || p.y > h) {
         p.x = Math.random() * w;
         p.y = Math.random() * h;
-        p.life = 40 + Math.random() * 220;
+        p.life = 120 + Math.random() * 320;
       }
     }
 
